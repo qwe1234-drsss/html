@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>个人成长控制台 V1.0</title>
+
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card-bg: #ffffff;
+    --primary: #2563eb;
+    --primary-soft: #e0edff;
+    --border: #e2e8f0;
+    --text-main: #111827;
+    --text-sub: #6b7280;
+    --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.08);
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --radius-sm: 8px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+      -system-ui, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background: radial-gradient(circle at top left, #e0edff 0, #f5f5f7 40%, #fafafa 100%);
+    color: var(--text-main);
+  }
+
+  .app-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.14);
+    backdrop-filter: blur(18px);
+    padding: 18px 22px 26px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+    margin-bottom: 12px;
+  }
+
+  .title-block h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .title-block h1 span {
+    font-size: 22px;
+  }
+
+  .title-block p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-sub);
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .nav-btn {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: #eef2ff;
+    color: #312e81;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+  }
+
+  .nav-btn span.icon {
+    font-size: 16px;
+  }
+
+  .nav-btn.active {
+    background: #1d4ed8;
+    color: #eff6ff;
+    border-color: #1d4ed8;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+  }
+
+  .nav-btn:not(.active):hover {
+    background: #e0ebff;
+    transform: translateY(-1px);
+  }
+
+  main {
+    margin-top: 6px;
+  }
+
+  .page {
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .page.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ==== 思维导图卡片区域 ==== */
+  .mindmap-container {
+    padding: 12px 6px 6px;
+  }
+
+  .node {
+    position: relative;
+    padding: 10px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    transition: all 0.18s ease;
+    user-select: none;
+  }
+
+  .node-pill {
+    display: inline-flex;
+    background: var(--primary-soft);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #1d4ed8;
+  }
+
+  .node:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+  }
+
+  .node-main {
+    font-weight: 600;
+  }
+
+  .children {
+    margin-left: 24px;
+    margin-top: 4px;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.25s ease, opacity 0.25s ease;
+  }
+
+  .children.open {
+    max-height: 600px;
+    opacity: 1;
+  }
+
+  .child-card {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: var(--radius-md);
+    border: 1px dashed #d1d5db;
+    font-size: 13px;
+    color: #111827;
+  }
+
+  .child-card small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 2px;
+  }
+
+  .node-toggle-indicator {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 1px solid #cbd5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #4b5563;
+  }
+
+  .node.open .node-toggle-indicator {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+
+  .node.main {
+    padding: 11px 16px;
+    background: linear-gradient(120deg, #1d4ed8, #6366f1);
+    color: white;
+    border-color: transparent;
+  }
+
+  .node.main .node-toggle-indicator {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #e5e7eb;
+  }
+
+  .node.main .node-pill {
+    background: rgba(15, 23, 42, 0.2);
+    color: #e0e7ff;
+  }
+
+  /* 可拖拽节点（电脑端） */
+  @media (min-width: 900px) {
+    .draggable {
+      cursor: grab;
+    }
+    .draggable:active {
+      cursor: grabbing;
+    }
+    .mindmap-free-layout {
+      position: relative;
+      min-height: 260px;
+      margin-top: 18px;
+      border-radius: 18px;
+      border: 1px dashed #cbd5f5;
+      padding: 14px;
+      background: radial-gradient(circle at top left, #e0ecff, #f8fafc);
+    }
+    .mindmap-free-layout .draggable {
+      position: absolute;
+    }
+  }
+
+  /* ==== 周报记录页面 ==== */
+
+  .grid-two {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr);
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    padding: 14px 16px 16px;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card p.desc {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  label {
+    font-size: 12px;
+    color: var(--text-sub);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 9px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 32px;
+    background: #f9fafb;
+  }
+
+  textarea {
+    min-height: 76px;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    border-radius: 999px;
+    border: none;
+    font-size: 13px;
+    padding: 6px 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.18s ease;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn-ghost {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .btn-ghost:hover {
+    background: #e5e7eb;
+  }
+
+  .log-list {
+    max-height: 260px;
+    overflow-y: auto;
+    margin-top: 6px;
+    padding-right: 4px;
+  }
+
+  .log-item-date {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 8px;
+    margin-bottom: 2px;
+  }
+
+  .pill {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    background: #e0f2fe;
+    color: #075985;
+    margin-right: 6px;
+  }
+
+  .log-item {
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+
+  .export-area {
+    margin-top: 6px;
+  }
+
+  .export-area textarea {
+    min-height: 140px;
+    font-size: 12px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-sub);
+    margin-top: 4px;
+  }
+
+  /* 说明页 */
+  .steps-list {
+    font-size: 13px;
+    color: #111827;
+    padding-left: 18px;
+  }
+
+  .steps-list li {
+    margin-bottom: 4px;
+  }
+
+  .badge {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    background: #ecfeff;
+    color: #0e7490;
+    margin-left: 4px;
+  }
+
+  @media (max-width: 780px) {
+    .app-shell {
+      padding: 16px 12px 18px;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .grid-two {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <header>
+    <div class="title-block">
+      <h1><span>📌</span> 个人成长控制台 <span style="font-size:13px;color:#6b7280;">V1.0</span></h1>
+      <p>量化 · 自动化 · Web · 认知，一页统筹。</p>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-btn active" data-page="page-roadmap">
+        <span class="icon">🗺️</span> 成长路线图
+      </button>
+      <button class="nav-btn" data-page="page-weekly">
+        <span class="icon">📝</span> 周报记录
+      </button>
+      <button class="nav-btn" data-page="page-help">
+        <span class="icon">⚙️</span> 使用说明
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 页面 1：成长路线图 -->
+    <section class="page active" id="page-roadmap">
+      <div class="mindmap-container">
+        <!-- 主节点：量化交易 -->
+        <div class="node main" data-node="n1">
+          <div class="node-toggle-indicator">+</div>
+          <div class="node-main">📘 量化交易</div>
+          <span class="node-pill">中周期 · 安全优先</span>
+        </div>
+        <div class="children" id="n1">
+          <div class="child-card">
+            周期：30m / 10m / 5m  
+            <small>用 30 分钟看主趋势，10 分钟确认结构，5 分钟寻找入场点。</small>
+          </div>
+          <div class="child-card">
+            技术指标：MACD / 均线 / 多周期共振  
+            <small>避免 1 分钟级别噪音，专注高质量信号。</small>
+          </div>
+          <div class="child-card">
+            风险管理：不加杠杆 / 止损策略  
+            <small>期货可以不当赌博工具，而是安全放大收益工具。</small>
+          </div>
+        </div>
+
+        <!-- 主节点：技术能力 -->
+        <div class="node main" data-node="n2">
+          <div class="node-toggle-indicator">+</div>
+          <div class="node-main">💻 技术能力</div>
+          <span class="node-pill">Python · Web · 工作流</span>
+        </div>
+        <div class="children" id="n2">
+          <div class="child-card">
+            Python：自动化交易 + 数据处理  
+            <small>策略回测、数据清洗、风控逻辑的主语言。</small>
+          </div>
+          <div class="child-card">
+            Web：Dashboard / 控制台 / 工具页面  
+            <small>把你的策略、工作流、复盘面板都做成小应用。</small>
+          </div>
+          <div class="child-card">
+            工作流：AI 集成 + 自动化任务链  
+            <small>让 AI 和脚本代替你完成重复劳动，你只做决策。</small>
+          </div>
+        </div>
+
+        <!-- 主节点：认知成长 -->
+        <div class="node main" data-node="n3">
+          <div class="node-toggle-indicator">+</div>
+          <div class="node-main">🧠 认知成长</div>
+          <span class="node-pill">长期 · 复利 · 超级个体</span>
+        </div>
+        <div class="children" id="n3">
+          <div class="child-card">
+            长期主义 & 复利思维  
+            <small>策略、技能、关系、健康都拉长时间维度去看。</small>
+          </div>
+          <div class="child-card">
+            能力叠加 → 超级个体战略  
+            <small>交易 + 技术 + 自动化 + 写作 / 汇报，组合出稀缺性。</small>
+          </div>
+          <div class="child-card">
+            自动化 = 放大时间价值  
+            <small>节省的不是 3 小时，而是一整条可复利的人生曲线。</small>
+          </div>
+        </div>
+
+        <!-- 电脑端拖拽区域（可选玩具） -->
+        <div class="mindmap-free-layout" id="free-layout" style="display:none;">
+          <div class="node draggable" style="top:10px;left:10px;">🎯 目标：年化 30～50%</div>
+          <div class="node draggable" style="top:90px;left:160px;">📚 技能叠加</div>
+          <div class="node draggable" style="top:180px;left:40px;">🤖 自动化 + 智能体</div>
+        </div>
+        <p class="hint" style="margin-top:10px;">
+          📎 提示：点击蓝色主节点可展开/折叠详细说明。电脑端可以开启拖拽区域自己摆卡片玩。
+        </p>
+      </div>
+    </section>
+
+    <!-- 页面 2：周报记录 -->
+    <section class="page" id="page-weekly">
+      <div class="grid-two">
+        <!-- 左侧：输入与列表 -->
+        <div class="card">
+          <h3>📝 今日记录</h3>
+          <p class="desc">想到就记一条。本周所有记录都会自动保存在浏览器里，周末一键导出给 AI 写周报。</p>
+          <div class="field-row">
+            <div>
+              <label for="log-date">日期</label>
+              <input type="date" id="log-date" />
+            </div>
+            <div>
+              <label for="log-project">项目/方向</label>
+              <select id="log-project">
+                <option value="量化交易">量化交易</option>
+                <option value="自动化/工作流">自动化/工作流</option>
+                <option value="Web/控制台">Web/控制台</option>
+                <option value="学习/阅读">学习/阅读</option>
+                <option value="其他">其他</option>
+              </select>
+            </div>
+            <div>
+              <label for="log-type">类型</label>
+              <select id="log-type">
+                <option value="开发/实现">开发/实现</option>
+                <option value="调研/学习">调研/学习</option>
+                <option value="复盘/总结">复盘/总结</option>
+                <option value="会议/沟通">会议/沟通</option>
+                <option value="杂项/事务">杂项/事务</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="log-content">具体内容</label>
+          <textarea id="log-content" placeholder="例如：完成 30 分钟趋势策略的第一版回测，发现滑点对高频策略影响极大。"></textarea>
+
+          <label for="log-duration">耗时（小时，可选）</label>
+          <input type="number" id="log-duration" step="0.5" min="0" placeholder="例如：1.5" />
+
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-add-log">+ 追加一条记录</button>
+            <button class="btn btn-ghost" id="btn-clear-week">清空本周记录</button>
+          </div>
+
+          <p class="hint">数据存储在本机浏览器 localStorage，只在你这台设备生效。如果换电脑，记得导出文本保存。</p>
+
+          <div class="log-list" id="log-list"></div>
+        </div>
+
+        <!-- 右侧：周报导出 -->
+        <div class="card">
+          <h3>📤 本周周报草稿</h3>
+          <p class="desc">
+            点击下方按钮，会自动把当前周的记录整理成一份「给 AI 的输入文案」，你复制整段发给我或发给大模型，就能生成正式周报。
+          </p>
+
+          <button class="btn btn-primary" id="btn-generate-export">🔁 生成本周汇总文本</button>
+          <button class="btn btn-ghost" id="btn-copy-export">📋 一键复制</button>
+
+          <div class="export-area">
+            <label>本周记录整合文本（可直接给 AI 使用）</label>
+            <textarea id="export-text" placeholder="点击上面的按钮后，这里会自动生成本周的结构化文本，用来交给 AI 写周报。"></textarea>
+          </div>
+
+          <div class="hint">
+            建议固定使用下面这样的提示词（Prompt）发给我或发给任意大模型：<br />
+            <code style="font-size:11px;">
+              「下面是我这一周的工作记录，请帮我写一份正式的周报，结构包含：本周概览、分项目工作内容、本周亮点、下周计划，语气专业简洁。」
+            </code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 页面 3：使用说明 -->
+    <section class="page" id="page-help">
+      <div class="card">
+        <h3>⚙️ 使用说明</h3>
+        <p class="desc">这是你自用的「个人成长控制台」，后面可以慢慢进化成你的交易/生活 OS。</p>
+        <ol class="steps-list">
+          <li>🗺️ <b>成长路线图</b><span class="badge">路线清晰</span><br/>点击蓝色主节点，展开/折叠对你现阶段最核心的三条线：量化交易、技术栈、认知成长。</li>
+          <li>📝 <b>周报记录</b><span class="badge">V1 半自动</span><br/>每天工作结束前，用「今日记录」区域简单写 1～3 行要点；周末点击「生成本周汇总文本」，复制发给 AI 生成正式周报。</li>
+          <li>💾 <b>数据存储</b><br/>目前所有记录保存在浏览器 localStorage 中，只在本机生效，不会上传到任何服务器，适合个人使用。</li>
+          <li>📲 <b>放到桌面当小应用</b><br/>
+            - Mac：用浏览器打开本页 → 通过浏览器菜单「添加到 Dock」或创建快捷方式。<br/>
+            - iPhone：部署到 GitHub Pages / 网盘后，用 Safari 打开链接 → 分享 → 添加到主屏幕。
+          </li>
+          <li>🚀 <b>未来升级方向</b><br/>
+            - 接入扣子：把周报记录写入数据库，由工作流定时触发生成周报。<br/>
+            - 接入交易数据：在新页面展示资金曲线、交易统计。<br/>
+            - 接入智能体：某个按钮一按，就跑一整条「导出交易 → 统计 → 生成复盘」链路。</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // ========== 导航切换 ==========
+  const navButtons = document.querySelectorAll(".nav-btn");
+  const pages = document.querySelectorAll(".page");
+
+  navButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-page");
+      navButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      pages.forEach((p) => {
+        p.classList.toggle("active", p.id === targetId);
+      });
+    });
+  });
+
+  // ========== 思维导图展开/收起 + indicator ==========
+  document.querySelectorAll(".node.main").forEach((node) => {
+    node.addEventListener("click", () => {
+      const id = node.getAttribute("data-node");
+      const children = document.getElementById(id);
+      const indicator = node.querySelector(".node-toggle-indicator");
+      const isOpen = children.classList.contains("open");
+      children.classList.toggle("open", !isOpen);
+      node.classList.toggle("open", !isOpen);
+      indicator.textContent = isOpen ? "+" : "–";
+    });
+  });
+
+  // ========== 周报记录：localStorage 管理 ==========
+  const STORAGE_KEY = "weeklyLogs_v1";
+
+  function getTodayDateStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function loadLogs() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveLogs(logs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  }
+
+  function getWeekRange(dateStr) {
+    const d = new Date(dateStr);
+    const day = d.getDay() || 7; // 周一到周日
+    const monday = new Date(d);
+    monday.setDate(d.getDate() - (day - 1));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (dt) =>
+      `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
+        dt.getDate()
+      ).padStart(2, "0")}`;
+    return { start: fmt(monday), end: fmt(sunday) };
+  }
+
+  const dateInput = document.getElementById("log-date");
+  const projectInput = document.getElementById("log-project");
+  const typeInput = document.getElementById("log-type");
+  const contentInput = document.getElementById("log-content");
+  const durationInput = document.getElementById("log-duration");
+  const logListEl = document.getElementById("log-list");
+  const btnAddLog = document.getElementById("btn-add-log");
+  const btnClearWeek = document.getElementById("btn-clear-week");
+  const btnGenerateExport = document.getElementById("btn-generate-export");
+  const btnCopyExport = document.getElementById("btn-copy-export");
+  const exportTextArea = document.getElementById("export-text");
+
+  dateInput.value = getTodayDateStr();
+
+  let logs = loadLogs();
+
+  function renderLogs() {
+    if (!logs.length) {
+      logListEl.innerHTML = '<p class="hint">还没有记录。先写一两条试试，感受一下节省脑力的感觉。</p>';
+      return;
+    }
+    // 按日期排序
+    const sorted = [...logs].sort((a, b) => (a.date > b.date ? 1 : -1));
+    let html = "";
+    let lastDate = "";
+    sorted.forEach((log) => {
+      if (log.date !== lastDate) {
+        html += `<div class="log-item-date">📅 ${log.date}</div>`;
+        lastDate = log.date;
+      }
+      html += `<div class="log-item">
+        <span class="pill">${log.project}</span>
+        <span class="pill" style="background:#fee2e2;color:#991b1b;">${log.type}</span>
+        ${log.content || ""}
+        ${log.duration ? `（约 ${log.duration}h）` : ""}
+      </div>`;
+    });
+    logListEl.innerHTML = html;
+  }
+
+  btnAddLog.addEventListener("click", () => {
+    const date = dateInput.value || getTodayDateStr();
+    const project = projectInput.value;
+    const type = typeInput.value;
+    const content = contentInput.value.trim();
+    const duration = durationInput.value.trim();
+
+    if (!content) {
+      alert("先随便写一句今天做了什么吧，不用追求完美。");
+      return;
+    }
+    logs.push({
+      date,
+      project,
+      type,
+      content,
+      duration: duration ? Number(duration) : null,
+    });
+    saveLogs(logs);
+    renderLogs();
+    contentInput.value = "";
+    durationInput.value = "";
+  });
+
+  btnClearWeek.addEventListener("click", () => {
+    if (!confirm("确定清空所有记录吗？此操作无法恢复。")) return;
+    logs = [];
+    saveLogs(logs);
+    renderLogs();
+  });
+
+  btnGenerateExport.addEventListener("click", () => {
+    if (!logs.length) {
+      alert("本周还没有记录哦，先写几条再生成吧。");
+      return;
+    }
+    const today = getTodayDateStr();
+    const { start, end } = getWeekRange(today);
+    const inWeek = logs.filter((log) => log.date >= start && log.date <= end);
+    if (!inWeek.length) {
+      alert("当前周内暂时没有记录，看看是不是日期选错了。");
+      return;
+    }
+    // 按项目分组
+    const byProject = {};
+    inWeek.forEach((log) => {
+      if (!byProject[log.project]) byProject[log.project] = [];
+      byProject[log.project].push(log);
+    });
+
+    let text = `【本周时间范围】${start} ~ ${end}\n\n【本周按项目分类的工作记录】\n\n`;
+    Object.keys(byProject).forEach((project) => {
+      text += `【项目：${project}】\n`;
+      const arr = byProject[project].sort((a, b) => (a.date > b.date ? 1 : -1));
+      arr.forEach((log, idx) => {
+        text += `${idx + 1}. ${log.date} - ${log.type}：${log.content}`;
+        if (log.duration) text += `（约 ${log.duration} 小时）`;
+        text += "\n";
+      });
+      text += "\n";
+    });
+
+    text += "【备注】以上是本周原始工作记录，帮我写周报时可据此进行归纳、提炼和结构化整理。";
+
+    exportTextArea.value = text;
+  });
+
+  btnCopyExport.addEventListener("click", () => {
+    if (!exportTextArea.value.trim()) {
+      alert("先点击“生成本周汇总文本”再复制。");
+      return;
+    }
+    exportTextArea.select();
+    document.execCommand("copy");
+    alert("已复制到剪贴板，直接粘贴给 AI 就行啦。");
+  });
+
+  renderLogs();
+
+  // ========== 电脑端拖拽小玩具 ==========
+  if (window.innerWidth >= 900) {
+    document.getElementById("free-layout").style.display = "block";
+    const drags = document.querySelectorAll(".mindmap-free-layout .draggable");
+    drags.forEach((el) => {
+      let offsetX = 0;
+      let offsetY = 0;
+      let dragging = false;
+
+      el.addEventListener("mousedown", (e) => {
+        dragging = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+        el.style.zIndex = "10";
+      });
+
+      document.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        el.style.left = e.clientX - offsetX + "px";
+        el.style.top = e.clientY - offsetY + "px";
+      });
+
+      document.addEventListener("mouseup", () => {
+        dragging = false;
+        el.style.zIndex = "1";
+      });
+    });
+  }
+</script>
+</body>
+</html>
